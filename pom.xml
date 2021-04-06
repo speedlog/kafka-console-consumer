@@ -10,7 +10,7 @@
 
 	<groupId>pl.speedlog</groupId>
 	<artifactId>kafka-consumer</artifactId>
-	<version>0.1.1-SNAPSHOT</version>
+	<version>0.1.1</version>
 	<name>kafka-consumer</name>
 	<description>Command line kafka consumer</description>
 
@@ -18,7 +18,7 @@
 		<connection>scm:git:${project.scm.url}</connection>
 		<developerConnection>scm:git:${project.scm.url}</developerConnection>
 		<url>git@github.com:speedlog/kafka-console-consumer.git</url>
-	  <tag>v0.0.2</tag>
+	  <tag>v0.1.1</tag>
   </scm>
 
 	<properties>
