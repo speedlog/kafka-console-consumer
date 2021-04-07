@@ -10,7 +10,7 @@
 
 	<groupId>pl.speedlog</groupId>
 	<artifactId>kafka-consumer</artifactId>
-	<version>0.1.2-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>kafka-consumer</name>
 	<description>Command line kafka consumer</description>
 
