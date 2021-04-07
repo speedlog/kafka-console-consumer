@@ -25,7 +25,11 @@ import java.util.stream.Collectors;
  */
 @Component
 @RequiredArgsConstructor
-@CommandLine.Command(name = "./kafka-consumer", mixinStandardHelpOptions = true, description = "Read events from given topic")
+@CommandLine.Command(name = "./kafka-consumer",
+        mixinStandardHelpOptions = true,
+        description = "Read events from given topic",
+        versionProvider = PropertiesVersionProvider.class
+)
 @Slf4j
 public class PrintCommand implements Runnable {
 

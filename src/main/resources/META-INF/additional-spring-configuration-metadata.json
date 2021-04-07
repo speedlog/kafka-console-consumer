@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "info.app.version",
+      "type": "java.lang.String",
+      "description": "Application version."
+    }
+  ] }
