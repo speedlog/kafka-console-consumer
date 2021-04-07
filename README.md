@@ -1,14 +1,17 @@
 # Kafka console consumer
 
-Console application for reading events from given timestamp.
+Console application for reading events from given timestamp.  
+May be useful for debugging.  
 
 ## Requirements
-* java >=8
+* java >= 8
 
 ## Build
 `./mvn install`
 
 ## Usage examples
+
+Download the latest release from [https://github.com/speedlog/kafka-console-consumer/releases](https://github.com/speedlog/kafka-console-consumer/releases).
 
 ### Configuration
 
@@ -31,9 +34,16 @@ Search `spring.kafka.*` properties.
 
 ### Run examples
 
-Read events from given topic and from given timestamp.
+#### Events from given timestamp
 ```
 ./kafka-consumer --topic TOPIC_NAME --timestamp TIMESTAMP_IN_MS
+```
+
+Example result
+```
+There is no message after given timestamp in partition 1
+There is no message after given timestamp in partition 0
+Partition: 2, offset: 1, event: {"name":"event","number":6}
 ```
 
 ## Motivation to create this tool
@@ -44,4 +54,4 @@ There are another tools to read events from given timestamp:
 * [https://github.com/edenhill/kafkacat](https://github.com/edenhill/kafkacat)
 
 Above tools require installed specific OS package or docker to run.  
-There was't such tool that requires only java - so now there is such tool :-)
+There wasn't such tool that requires only java - so now there it is :-)
