@@ -33,13 +33,20 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PrintCommand implements Runnable {
 
+    public static final String TOPIC_OPTION_NAME = "--topic";
+    public static final String TIMESTAMP_OPTION_NAME = "--timestamp";
+    public static final String PARTITION_OPTION_NAME = "--partition";
+
     private final KafkaProperties kafkaProperties;
 
-    @CommandLine.Option(names = {"--topic"}, required = true, description = "Topic name")
+    @CommandLine.Option(names = { TOPIC_OPTION_NAME }, required = true, description = "Topic name")
     private String topicName;
 
-    @CommandLine.Option(names = {"--timestamp"}, required = true, description = "Read events from given timestamp in milliseconds")
+    @CommandLine.Option(names = { TIMESTAMP_OPTION_NAME }, required = true, description = "Read events from given timestamp in milliseconds")
     private long timestampMs;
+
+    @CommandLine.Option(names = { PARTITION_OPTION_NAME }, description = "Read events from given partition")
+    private Long partition;
 
     @Override
     public void run() {
@@ -52,6 +59,13 @@ public class PrintCommand implements Runnable {
 
         // Transform PartitionInfo into TopicPartition
         List<TopicPartition> topicPartitionList = getTopicPartitions(partitionInfos);
+        if (partition != null) {
+            topicPartitionList = getSpecificPartition(topicPartitionList);
+            if (topicPartitionList.isEmpty()) {
+                log.info("Partition number {} doesn't exists", partition);
+                return;
+            }
+        }
 
         // Assign the consumer to these partitions
         consumer.assign(topicPartitionList);
@@ -72,6 +86,12 @@ public class PrintCommand implements Runnable {
         for(ConsumerRecord<String, String> consumerRecord : poll) {
             log.info("Partition: {}, offset: {}, event: {}", consumerRecord.partition(), consumerRecord.offset(), consumerRecord.value());
         }
+    }
+
+    private List<TopicPartition> getSpecificPartition(List<TopicPartition> topicPartitionList) {
+        return topicPartitionList.stream()
+                .filter(topicPartition -> topicPartition.partition() == partition)
+                .collect(Collectors.toList());
     }
 
     private Map<TopicPartition, Long> searchPartitionsByOffset(List<TopicPartition> topicPartitionList) {

@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -26,6 +27,7 @@ import static org.hamcrest.Matchers.equalTo;
 @SpringBootTest
 @Testcontainers
 @Import(PrintCommandTestIT.KafkaConfiguration.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ActiveProfiles("test")
 class PrintCommandTestIT {
 
@@ -48,9 +50,9 @@ class PrintCommandTestIT {
 	@BeforeAll
 	static void beforeAll(@Autowired KafkaTemplate<String, ExampleEvent> kafkaTemplate) throws InterruptedException {
 		// send 3 events - each to another partition
-		kafkaTemplate.send(TOPIC_NAME, 0, null, new ExampleEvent("event", 1));
-		kafkaTemplate.send(TOPIC_NAME, 1, null, new ExampleEvent("event", 2));
-		kafkaTemplate.send(TOPIC_NAME, 2, null, new ExampleEvent("event", 3));
+		kafkaTemplate.send(TOPIC_NAME, 0, "", new ExampleEvent("event", 1));
+		kafkaTemplate.send(TOPIC_NAME, 1, "", new ExampleEvent("event", 2));
+		kafkaTemplate.send(TOPIC_NAME, 2, "", new ExampleEvent("event", 3));
 
 		// sleep 4 seconds
 		TimeUnit.SECONDS.sleep(2);
@@ -59,11 +61,11 @@ class PrintCommandTestIT {
 		beforeSecondSendTimestampMs = System.currentTimeMillis();
 
 		// send 3 events - each to another partition
-		kafkaTemplate.send(TOPIC_NAME,0, null, new ExampleEvent("event", 4));
-		kafkaTemplate.send(TOPIC_NAME,1, null, new ExampleEvent("event", 5));
+		kafkaTemplate.send(TOPIC_NAME,0, "", new ExampleEvent("event", 4));
+		kafkaTemplate.send(TOPIC_NAME,1, "", new ExampleEvent("event", 5));
 		TimeUnit.SECONDS.sleep(1);
 		beforeLastEventSendTimestampMs = System.currentTimeMillis();
-		kafkaTemplate.send(TOPIC_NAME,2, null, new ExampleEvent("event", 6));
+		kafkaTemplate.send(TOPIC_NAME,2, "", new ExampleEvent("event", 6));
 	}
 
 	@Test
@@ -74,18 +76,49 @@ class PrintCommandTestIT {
 		"Partition: 1, offset: 1, event: {\"name\":\"event\",\"number\":5}\n" +
 		"Partition: 0, offset: 1, event: {\"name\":\"event\",\"number\":4}\n";
 		outputCapture.expect(equalTo(expectedOutput));
-		commands.run("--topic=" + TOPIC_NAME, "--timestamp=" + beforeSecondSendTimestampMs);
+		commands.run(PrintCommand.TOPIC_OPTION_NAME + "=" + TOPIC_NAME, PrintCommand.TIMESTAMP_OPTION_NAME + "=" + beforeSecondSendTimestampMs);
 	}
 
 	@Test
 	@CaptureSystemOutput
-	void shouldInformWhenThereIsNoEventsWithGivenTimestampInPartition(CaptureSystemOutput.OutputCapture outputCapture) {
+	void shouldReadEventsFromGivenTimestampAndPartition(CaptureSystemOutput.OutputCapture outputCapture) {
+		String expectedOutput =
+		"Partition: 1, offset: 1, event: {\"name\":\"event\",\"number\":5}\n";
+		outputCapture.expect(equalTo(expectedOutput));
+		commands.run(PrintCommand.TOPIC_OPTION_NAME + "=" + TOPIC_NAME, PrintCommand.TIMESTAMP_OPTION_NAME + "=" + beforeSecondSendTimestampMs,
+				PrintCommand.PARTITION_OPTION_NAME + "=1");
+	}
+
+	@Test
+	@CaptureSystemOutput
+	void shouldInformWhenThereIsNoEventsWithGivenTimestamp(CaptureSystemOutput.OutputCapture outputCapture) {
 		String expectedOutput =
 				"There is no message after given timestamp in partition 1\n" +
 				"There is no message after given timestamp in partition 0\n" +
 				"Partition: 2, offset: 1, event: {\"name\":\"event\",\"number\":6}\n";
 		outputCapture.expect(equalTo(expectedOutput));
-		commands.run("--topic=" + TOPIC_NAME, "--timestamp=" + beforeLastEventSendTimestampMs);
+		commands.run(PrintCommand.TOPIC_OPTION_NAME + "=" + TOPIC_NAME, PrintCommand.TIMESTAMP_OPTION_NAME + "=" + beforeLastEventSendTimestampMs);
+	}
+
+	@Test
+	@CaptureSystemOutput
+	void shouldInformWhenThereIsNoEventsWithGivenTimestampAndPartition(CaptureSystemOutput.OutputCapture outputCapture) {
+		String expectedOutput =
+				"There is no message after given timestamp in partition 1\n";
+		outputCapture.expect(equalTo(expectedOutput));
+		commands.run(PrintCommand.TOPIC_OPTION_NAME + "=" + TOPIC_NAME, PrintCommand.TIMESTAMP_OPTION_NAME + "=" + beforeLastEventSendTimestampMs,
+				PrintCommand.PARTITION_OPTION_NAME + "=" + "1");
+	}
+
+	@Test
+	@CaptureSystemOutput
+	void shouldInformAboutNotExistingPartition(CaptureSystemOutput.OutputCapture outputCapture) {
+		String nonExsitingPartition = "4";
+		String expectedOutput =
+				"Partition number " + nonExsitingPartition + " doesn't exists\n";
+		outputCapture.expect(equalTo(expectedOutput));
+		commands.run(PrintCommand.TOPIC_OPTION_NAME + "=" + TOPIC_NAME, PrintCommand.TIMESTAMP_OPTION_NAME + "=" + beforeLastEventSendTimestampMs,
+				PrintCommand.PARTITION_OPTION_NAME + "=" + nonExsitingPartition);
 	}
 
 	@TestConfiguration

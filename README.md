@@ -46,6 +46,21 @@ There is no message after given timestamp in partition 0
 Partition: 2, offset: 1, event: {"name":"event","number":6}
 ```
 
+#### Events from given timestamp and partition
+```
+./kafka-consumer --topic TOPIC_NAME --timestamp TIMESTAMP_IN_MS --partition PARTITION_NUMBER
+```
+
+Example result
+```
+Partition: 3, offset: 1, event: {"name":"event","number":6}
+```
+
+Example result when partition doesn't exists
+```
+Partition number 4 doesn't exists
+```
+
 ## Motivation to create this tool
 
 Command line (`kafka-console-consumer.sh`) distributed with kafka doesn't have features to read events from given timestamp.  
