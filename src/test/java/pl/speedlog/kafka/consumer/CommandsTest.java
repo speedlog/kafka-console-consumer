@@ -27,6 +27,13 @@ class CommandsTest {
 
 	@Test
 	@CaptureSystemOutput
+	void invalidPartition(CaptureSystemOutput.OutputCapture outputCapture) {
+		outputCapture.expect(containsString("Invalid value for option '--partition': 'invalid' is not a long"));
+		commands.run("--topic=example-topic", "--timestamp=1617909697000", "--partition=invalid");
+	}
+
+	@Test
+	@CaptureSystemOutput
 	void shouldPrintApplicationVersion(CaptureSystemOutput.OutputCapture outputCapture) {
 		outputCapture.expect(matchesPattern("Version: \\d+\\.\\d+\\.\\d+.*\\n.*\\n"));
 		commands.run("--version");
